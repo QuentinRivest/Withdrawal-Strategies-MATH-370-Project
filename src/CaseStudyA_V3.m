@@ -170,9 +170,9 @@ function h = CaseStudyA_V3(varargin)
     ax_g_1 = uiaxes(g1);   title(ax_g_1,'Investment Gains (all strategies)');
     ax_w_1 = uiaxes(g1);   title(ax_w_1,'Annual Withdrawals');
     ax_bal_1 = uiaxes(g1); title(ax_bal_1,'Portfolio Balances');
-    ax_r_mc = uiaxes(g2);   title(ax_r_mc,'Market Returns (10th-90th %)');
-    ax_g_mc = uiaxes(g2);   title(ax_g_mc,'Investment Gains (10th-90th %)');
-    ax_w_mc = uiaxes(g2);   title(ax_w_mc,'Withdrawals (10th-90th %)');
+    ax_r_mc = uiaxes(g2);   title(ax_r_mc,'Market Returns (Median)');
+    ax_g_mc = uiaxes(g2);   title(ax_g_mc,'Investment Gains (Median)');
+    ax_w_mc = uiaxes(g2);   title(ax_w_mc,'Withdrawals (Median)');
 %    ax_bal_mc = uiaxes(g2); title(ax_bal_mc,'Ending Balances');
     allAxes = [ax_r_1 ax_g_1 ax_w_1 ax_bal_1 ax_r_mc ax_g_mc ax_w_mc... %ax_bal_mc
                ];
@@ -292,12 +292,11 @@ function h = CaseStudyA_V3(varargin)
         end
 
         cla(ax_r_mc); hold(ax_r_mc,'on');
-        [medR,loR,hiR] = bands_from_matrix(Rm);
-        fillBand(ax_r_mc,1:years,loR,hiR,[.5 .5 .5],.22,'10-90% band');
+        medR = median(Rm,1);
         plot(ax_r_mc,1:years,medR,'k','LineWidth',1.8,'DisplayName','Median');
         legend(ax_r_mc,'Location','best');
-        plotMultiBands(ax_g_mc,1:years,gainMat,labels,colors,'Gains - Monte Carlo');
-        plotMultiBands(ax_w_mc,1:years,withMat,labels,colors,'Withdrawals - Monte Carlo');
+        plotMultiMedians(ax_g_mc,1:years,gainMat,labels,colors,'Gains - Monte Carlo');
+        plotMultiMedians(ax_w_mc,1:years,withMat,labels,colors,'Withdrawals - Monte Carlo');
 
         endBal = zeros(simN,K);
         for k = 1:K
@@ -356,7 +355,7 @@ function h = CaseStudyA_V3(varargin)
         lines{end+1} = 'Early $0: balance reaches zero BEFORE the final retirement year.';
         lines{end+1} = sprintf('At end $0: includes intentional exhaustion by Drawdown at age %d (bequest = $0).',endAge);
         lines{end+1} = 'Med total W: median TOTAL nominal dollars actually withdrawn across retirement.';
-        lines{end+1} = 'Bands shade the 10th-90th percentiles at each year (middle 80% of paths).';
+        lines{end+1} = 'Monte Carlo lines show the median at each year across all simulated paths.';
         lines{end+1} = sprintf('GK: initial %.2f%%, guardrails +/-%.0f%%, spending changes +/-%.0f%%, cuts off final %d years', ...
             100*p.gkR0,100*p.gkBand,100*p.gkAdjust,p.gkFreeze);
         lines{end+1} = sprintf('Drawdown: assumed annual %.2f%%, end bequest target %s', ...
@@ -525,29 +524,16 @@ function plotMulti(ax,x,dataCell,labels,colors,heading)
     legend(ax,'Location','best');
 end
 
-function plotMultiBands(ax,x,dataCell,labels,colors,heading)
+function plotMultiMedians(ax,x,dataCell,labels,colors,heading)
     cla(ax); hold(ax,'on');
     handles = gobjects(1,numel(dataCell));
     for k = 1:numel(dataCell)
-        [med,lo,hi] = bands_from_matrix(dataCell{k});
-        bandH = fillBand(ax,x,lo,hi,colors(k,:),.12,[labels{k} ' band']);
-        bandH.HandleVisibility = 'off';
+        med = median(dataCell{k},1);
         handles(k) = plot(ax,x,med,'LineWidth',1.7,'Color',colors(k,:), ...
             'DisplayName',labels{k});
     end
     title(ax,heading);
     legend(ax,handles,labels,'Location','best');
-end
-
-function [med,lo,hi] = bands_from_matrix(M)
-    [~,T] = size(M);
-    med = zeros(1,T); lo = med; hi = med;
-    for j = 1:T
-        col = sort(M(:,j));
-        med(j) = percentile_from_sorted(col,50);
-        lo(j) = percentile_from_sorted(col,10);
-        hi(j) = percentile_from_sorted(col,90);
-    end
 end
 
 function y = percentile_from_sorted(sortedValues,p)
@@ -560,14 +546,6 @@ function y = percentile_from_sorted(sortedValues,p)
     else
         y = sortedValues(i)+(rank-i)*(sortedValues(j)-sortedValues(i));
     end
-end
-
-function hb = fillBand(ax,x,ylo,yhi,col,opacity,label)
-    X = [x,fliplr(x)];
-    Y = [ylo,fliplr(yhi)];
-    hb = patch('Parent',ax,'XData',X,'YData',Y, ...
-        'FaceColor',col,'FaceAlpha',opacity,'EdgeColor','none', ...
-        'DisplayName',label);
 end
 
 function violin_on_uiaxes(ax,dataCell,labels,colors)
