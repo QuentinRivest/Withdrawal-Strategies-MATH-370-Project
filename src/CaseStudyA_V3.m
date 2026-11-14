@@ -173,7 +173,9 @@ function h = CaseStudyA_V3(varargin)
     ax_r_mc = uiaxes(g2);   title(ax_r_mc,'Market Returns (10th-90th %)');
     ax_g_mc = uiaxes(g2);   title(ax_g_mc,'Investment Gains (10th-90th %)');
     ax_w_mc = uiaxes(g2);   title(ax_w_mc,'Withdrawals (10th-90th %)');
-    allAxes = [ax_r_1 ax_g_1 ax_w_1 ax_bal_1 ax_r_mc ax_g_mc ax_w_mc];
+%    ax_bal_mc = uiaxes(g2); title(ax_bal_mc,'Ending Balances');
+    allAxes = [ax_r_1 ax_g_1 ax_w_1 ax_bal_1 ax_r_mc ax_g_mc ax_w_mc... %ax_bal_mc
+               ];
     for a = allAxes
         xlabel(a,'Year'); grid(a,'on');
     end
@@ -181,6 +183,7 @@ function h = CaseStudyA_V3(varargin)
     ylabel(ax_w_1,'Withdrawals ($)'); ylabel(ax_bal_1,'Balance ($)');
     ylabel(ax_r_mc,'Return'); ylabel(ax_g_mc,'Gains ($)');
     ylabel(ax_w_mc,'Withdrawals ($)');
+%    ylabel(ax_bal_mc,'Ending Balance ($)'); xlabel(ax_bal_mc,'Strategy');
     
     outTxt = uitextarea(right,'Editable','off','FontName','Consolas');
     outTxt.Layout.Row = 2;
@@ -209,6 +212,7 @@ function h = CaseStudyA_V3(varargin)
             'AutoRun',autoRun,'RunBtn',runBtn);
         h.Params = params;
         h.SinglePathAxes = struct('r',ax_r_1,'g',ax_g_1,'w',ax_w_1,'bal',ax_bal_1);
+%        h.SimsAxes = struct('r',ax_r_mc,'g',ax_g_mc,'w',ax_w_mc,'bal',ax_bal_mc);
     end
     
     %% Callbacks
@@ -300,8 +304,9 @@ function h = CaseStudyA_V3(varargin)
             endBal(:,k) = balMat{k}(:,end);
         end
 
-        % REMOVING the logic for the 'Ending Balance' violin graph contents.
-        % The graph itself () was removed above.
+        % COMMENTED OUT the logic for the 'Ending Balance' violin graph
+        % contents.
+        % The graph itself was COMMENTED OUT above.
 %        violin_on_uiaxes(ax_bal_mc,num2cell(endBal,1),labels,colors);
 %        title(ax_bal_mc,sprintf('Ending Balances at Age %d',endAge));
 %
